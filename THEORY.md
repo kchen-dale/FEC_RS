@@ -17,7 +17,7 @@ This document explains the math behind this repository: finite-field arithmetic,
 - $k$ = number of data packets (`K`), $n$ = total packets after encoding (`N`), $L$ = bytes per packet (`PKT_LEN`).
 - Indices start at 0, as in the code. Data packets are $0,\dots,k-1$, and parity packets are $k,\dots,n-1$.
 - Bytes are written in hex (`0x57`). Byte matrices are printed without the `0x`, exactly as the program prints them.
-- In $\mathrm{GF}(2^m)$, "$+$" means field addition, which is bitwise XOR ($\oplus$).
+- In $\mathrm{GF}(2^m)$, the symbol $+$ means field addition, which is bitwise XOR ($\oplus$).
 
 ---
 
@@ -47,15 +47,17 @@ A **Galois field** is a finite field. Two classical facts describe all of them:
 - A field with $q$ elements exists **if and only if** $q = p^m$ for a prime $p$ (the *characteristic*) and an integer $m \ge 1$.
 - For each such $q$, the field is unique up to relabelling. It is written $\mathrm{GF}(p^m)$.
 
-So fields with 8 or 256 elements exist, but fields with 6 or 10 elements do not. In particular, the bytes $\{0,\dots,255\}$ with arithmetic **mod 256 are not a field**, because 2 has no inverse mod 256. $\mathrm{GF}(2^8)$ needs a different construction.
+So fields with 8 or 256 elements exist, but fields with 6 or 10 elements do not. In particular, the bytes $`\{0,\dots,255\}`$ with arithmetic **mod 256 are not a field**, because 2 has no inverse mod 256. $\mathrm{GF}(2^8)$ needs a different construction.
 
 **Characteristic 2.** In $\mathrm{GF}(2^m)$, $1+1=0$, so $a+a=0$ and $-a=a$. **Addition and subtraction are the same operation (XOR).** That is why no minus signs appear below.
 
 ### 1.3 Constructing GF(2^m)
 
-The elements are the polynomials of degree $< m$ with coefficients in $\{0,1\}$:
+The elements are the polynomials of degree $< m$ with coefficients in $`\{0,1\}`$:
 
-$$a(x) = a_{m-1}x^{m-1} + \dots + a_1 x + a_0, \qquad a_i \in \{0,1\}.$$
+```math
+a(x) = a_{m-1}x^{m-1} + \dots + a_1 x + a_0, \qquad a_i \in \{0,1\}.
+```
 
 - **Addition:** add coefficients mod 2.
 - **Multiplication:** multiply the polynomials, then take the remainder modulo a fixed **irreducible** polynomial $P(x)$ of degree $m$. Irreducible means it cannot be factored over $\mathrm{GF}(2)$. Irreducibility plays the role primality plays for integers mod $p$: it guarantees that every non-zero element has an inverse.
@@ -91,17 +93,23 @@ The integer order is **not** the power order: $\alpha^3 = 3$ but $\alpha^4 = 6$.
 
 Addition is XOR, with no carries and no reduction step:
 
-$$(x^2+x) + (x+1) = x^2+1 \quad\Longleftrightarrow\quad 110 \oplus 011 = 101 \quad (6 \oplus 3 = 5).$$
+```math
+(x^2+x) + (x+1) = x^2+1 \quad\Longleftrightarrow\quad 110 \oplus 011 = 101 \quad (6 \oplus 3 = 5).
+```
 
 ### 2.2 Multiplication
 
 Multiply, then reduce mod $P(x)$. In $\mathrm{GF}(2^3)$ with $P(x) = x^3+x+1$:
 
-$$(x^2+x)(x+1) = x^3 + x^2 + x^2 + x = x^3 + x.$$
+```math
+(x^2+x)(x+1) = x^3 + x^2 + x^2 + x = x^3 + x.
+```
 
 Since $x^3 \equiv x+1$:
 
-$$x^3 + x \equiv (x+1) + x = 1.$$
+```math
+x^3 + x \equiv (x+1) + x = 1.
+```
 
 So $6 \cdot 3 = 1$ in this field: `6` and `3` are inverses of each other. With powers, $\alpha^4 \cdot \alpha^3 = \alpha^7 = 1$.
 
@@ -109,7 +117,7 @@ So $6 \cdot 3 = 1$ in this field: `6` and `3` are inverses of each other. With p
 
 The inverse of $a \ne 0$ is the unique $b$ with $a \cdot b \equiv 1 \pmod{P}$. There are three ways to find it:
 
-1. **Extended Euclidean algorithm** on $a(x)$ and $P(x)$. It returns $u, v$ with $u\,a + v\,P = 1$, so $a^{-1} = u \bmod P$.
+1. **Extended Euclidean algorithm** on $a(x)$ and $P(x)$. It returns $u, v$ with $`u\,a + v\,P = 1`$, so $a^{-1} = u \bmod P$.
 2. **Exponentiation.** The non-zero elements form a group of order $2^m-1$, so $a^{-1} = a^{2^m-2}$.
 3. **Log table** (Section 3): $\log a^{-1} = (2^m - 1 - \log a) \bmod (2^m-1)$. This is what the code does.
 
@@ -119,40 +127,46 @@ The inverse of $a \ne 0$ is the unique $b$ with $a \cdot b \equiv 1 \pmod{P}$. T
 
 The code uses
 
-$$P(x) = x^8 + x^4 + x^3 + x^2 + 1 \qquad (\texttt{0x11D}),$$
+```math
+P(x) = x^8 + x^4 + x^3 + x^2 + 1 \qquad (\texttt{0x11D}),
+```
 
 so the reduction rule is $x^8 \equiv x^4 + x^3 + x^2 + 1$.
 
 **Step 1: write the operands as polynomials.**
 
-$$\texttt{0x57} = 0101\,0111_2 = x^6+x^4+x^2+x+1, \qquad \texttt{0x83} = 1000\,0011_2 = x^7+x+1.$$
+```math
+\texttt{0x57} = 0101\,0111_2 = x^6+x^4+x^2+x+1, \qquad \texttt{0x83} = 1000\,0011_2 = x^7+x+1.
+```
 
 **Step 2: multiply.**
 
-$$
+```math
 \begin{aligned}
 (x^6+x^4+x^2+x+1)\cdot x^7 &= x^{13}+x^{11}+x^9+x^8+x^7\\
 (x^6+x^4+x^2+x+1)\cdot x   &= x^7+x^5+x^3+x^2+x\\
 (x^6+x^4+x^2+x+1)\cdot 1   &= x^6+x^4+x^2+x+1
 \end{aligned}
-$$
+```
 
 When the three rows are added, the pairs $x^7$, $x^2$ and $x$ cancel:
 
-$$R(x) = x^{13}+x^{11}+x^9+x^8+x^6+x^5+x^4+x^3+1.$$
+```math
+R(x) = x^{13}+x^{11}+x^9+x^8+x^6+x^5+x^4+x^3+1.
+```
 
 **Step 3: reduce, removing the highest term each time.**
 
 - $x^{13} = x^5 \cdot x^8 \equiv x^9+x^8+x^7+x^5$. The pairs $x^9$, $x^8$ and $x^5$ cancel, leaving $R \equiv x^{11}+x^7+x^6+x^4+x^3+1$.
 - $x^{11} = x^3 \cdot x^8 \equiv x^7+x^6+x^5+x^3$. The pairs $x^7$, $x^6$ and $x^3$ cancel, leaving $R \equiv x^5+x^4+1$.
 
-**Step 4: convert back.** $x^5+x^4+1 = 0011\,0001_2 =$ **`0x31`**.
+**Step 4: convert back.** $`x^5+x^4+1 = 0011\,0001_2 =`$ **`0x31`**.
 
 > The result depends on $P(x)$. AES uses `0x11B`, and there `0x57 · 0x83 = 0xC1`. The two fields are isomorphic but label their bytes differently, so encoder and decoder must use the same polynomial.
 
 ### 2.5 Shift-and-XOR multiplication
 
-The hand computation above turns into a short loop. Since $a \cdot b = \sum_i b_i\,(x^i a)$, scan the bits of $b$ and keep multiplying $a$ by $x$ (a left shift). If the shift would set bit 8, reduce immediately by XORing in the low byte of $P$ (`0x1D`):
+The hand computation above turns into a short loop. Since $`a \cdot b = \sum_i b_i\,(x^i a)`$, scan the bits of $b$ and keep multiplying $a$ by $x$ (a left shift). If the shift would set bit 8, reduce immediately by XORing in the low byte of $P$ (`0x1D`):
 
 ```c
 uint8_t result = 0;
@@ -189,14 +203,14 @@ This repo uses `0x1D` (`POLYNOMIAL` in [`logarithm.h`](logarithm.h)). The AES po
 
 With $\alpha^3 = \alpha + 1$:
 
-$$
+```math
 \begin{aligned}
 \alpha^4 &= \alpha\cdot\alpha^3 = \alpha^2+\alpha\\
 \alpha^5 &= \alpha\cdot\alpha^4 = \alpha^3+\alpha^2 = \alpha^2+\alpha+1\\
 \alpha^6 &= \alpha\cdot\alpha^5 = \alpha^3+\alpha^2+\alpha = (\alpha+1)+\alpha^2+\alpha = \alpha^2+1\\
 \alpha^7 &= \alpha\cdot\alpha^6 = \alpha^3+\alpha = 1
 \end{aligned}
-$$
+```
 
 The powers visit all seven non-zero elements and return to 1. As arrays:
 
@@ -214,14 +228,14 @@ The powers visit all seven non-zero elements and return to 1. As arrays:
 
 Writing $a = \alpha^{\log a}$ turns multiplication into addition of exponents mod $2^m-1$. For $a, b \ne 0$:
 
-$$
+```math
 \begin{aligned}
 a \cdot b &= \exp[(\log a + \log b) \bmod (2^m-1)]\\
 a / b &= \exp[(\log a - \log b) \bmod (2^m-1)]\\
 a^{-1} &= \exp[(2^m - 1 - \log a) \bmod (2^m-1)]\\
 a^e &= \exp[(e \cdot \log a) \bmod (2^m-1)]
 \end{aligned}
-$$
+```
 
 Zero is a special case: $0 \cdot b = 0$, $0/b = 0$, $a/0$ is an error, $0^0 = 1$, and $0^e = 0$ for $e > 0$.
 
@@ -250,7 +264,7 @@ The sender has $k$ data packets of $L$ bytes each and transmits $n > k$ packets.
 
 Choose $n$ **distinct** evaluation points $x_0, \dots, x_{n-1}$. A coefficient vector $\mathbf{a} = (a_0, \dots, a_{k-1})$ defines a polynomial $f(x) = a_0 + a_1x + \dots + a_{k-1}x^{k-1}$. Evaluating $f$ at all the points is a product with the $n \times k$ **Vandermonde matrix**:
 
-$$
+```math
 \begin{bmatrix} f(x_0) \\ f(x_1) \\ \vdots \\ f(x_{n-1}) \end{bmatrix}
 =
 \underbrace{\begin{bmatrix}
@@ -260,13 +274,15 @@ $$
 1 & x_{n-1} & x_{n-1}^2 & \cdots & x_{n-1}^{k-1}
 \end{bmatrix}}_{V}
 \begin{bmatrix} a_0 \\ a_1 \\ \vdots \\ a_{k-1} \end{bmatrix}
-$$
+```
 
 By convention $0^0 = 1$, so the point $x_i = 0$ is allowed and gives the row $(1, 0, \dots, 0)$.
 
 **Lemma (any $k$ rows of $V$ are invertible).** For any set $S$ of $k$ rows,
 
-$$\det V_S = \prod_{i<j,\ i,j \in S} (x_j - x_i) \ne 0,$$
+```math
+\det V_S = \prod_{i<j,\ i,j \in S} (x_j - x_i) \ne 0,
+```
 
 because the points are distinct. Another way to see it: if $V_S\mathbf{a} = 0$, then a polynomial of degree $< k$ has $k$ distinct roots, so it must be zero.
 
@@ -278,43 +294,49 @@ $\mathrm{GF}(2^8)$ has only 256 elements, so **$n \le 256$**. The code uses the 
 
 Encoding with $\mathbf{c} = V\mathbf{m}$ is MDS but not systematic. To make it systematic, split $V$ into its top $k$ rows and the remaining $n-k$ rows, and multiply by the inverse of the top block:
 
-$$
+```math
 V = \begin{bmatrix} V_{\text{up}} \\ V_{\text{low}} \end{bmatrix},
 \qquad
 G = V\,V_{\text{up}}^{-1} = \begin{bmatrix} I_k \\ Q \end{bmatrix},
 \qquad
 Q = V_{\text{low}}\,V_{\text{up}}^{-1}.
-$$
+```
 
 This is [`get_encoding_matrix`](rs.c). $Q$ is the $(n-k) \times k$ **parity matrix**.
 
 **What G means: interpolation.** Let $\mathbf{a} = V_{\text{up}}^{-1}\mathbf{m}$. Then $V_{\text{up}}\mathbf{a} = \mathbf{m}$ says $f(x_i) = m_i$ for $i < k$: $f$ is the unique polynomial of degree $< k$ through the $k$ data values. The codeword is
 
-$$\mathbf{c} = G\mathbf{m} = V\mathbf{a} = \big(f(x_0), \dots, f(x_{n-1})\big),$$
+```math
+\mathbf{c} = G\mathbf{m} = V\mathbf{a} = \big(f(x_0), \dots, f(x_{n-1})\big),
+```
 
 so **each parity symbol is the interpolating polynomial evaluated at an extra point**. Decoding reverses this: any $k$ values of $f$ determine $f$, and with it the data.
 
 **Theorem (MDS).** For any set $S$ of $k$ rows, $G_S$ is invertible.
 
-*Proof.* $G_S = V_S\,V_{\text{up}}^{-1}$, and both factors are invertible by the lemma. ∎
+*Proof.* $`G_S = V_S\,V_{\text{up}}^{-1}`$, and both factors are invertible by the lemma. ∎
 
 So the minimum distance is $d = n - k + 1$, the Singleton bound, and **any $n-k$ erasures can be recovered**.
 
-> **A common pitfall.** It is tempting to stack the identity directly on the lower Vandermonde rows, $\begin{bmatrix} I_k \\ V_{\text{low}} \end{bmatrix}$. That matrix is **not** MDS in general. With $x_i = i$, $n = 10$ and $k = 5$, rows $\{3,6,7,8,9\}$ are linearly dependent, so losing packets 0, 1, 2, 4 and 5 would be unrecoverable. This mistake appeared in Plank's well-known 1997 tutorial and was corrected in 2005 [2, 3]. Multiplying by $V_{\text{up}}^{-1}$, as this repo does, is the correct construction.
+> **A common pitfall.** It is tempting to stack the identity directly on the lower Vandermonde rows, $`\begin{bmatrix} I_k \\ V_{\text{low}} \end{bmatrix}`$. That matrix is **not** MDS in general. With $x_i = i$, $n = 10$ and $k = 5$, rows $`\{3,6,7,8,9\}`$ are linearly dependent, so losing packets 0, 1, 2, 4 and 5 would be unrecoverable. This mistake appeared in Plank's well-known 1997 tutorial and was corrected in 2005 [2, 3]. Multiplying by $V_{\text{up}}^{-1}$, as this repo does, is the correct construction.
 
 ### 4.4 Encoding
 
 Stack the data packets as the rows of a $k \times L$ matrix $D$. The $n \times L$ matrix of transmitted packets is
 
-$$C = G\,D = \begin{bmatrix} D \\ QD \end{bmatrix}.$$
+```math
+C = G\,D = \begin{bmatrix} D \\ QD \end{bmatrix}.
+```
 
-This is [`rs_encoding`](rs.c). Each parity byte is $C_{i,j} = \bigoplus_t Q_{i-k,\,t} \cdot D_{t,j}$. Encoding costs $(n-k)\,k\,L$ field multiplications, and $G$ depends only on $(n, k)$, so it is computed once.
+This is [`rs_encoding`](rs.c). Each parity byte is $`C_{i,j} = \bigoplus_t Q_{i-k,\,t} \cdot D_{t,j}`$. Encoding costs $`(n-k)\,k\,L`$ field multiplications, and $G$ depends only on $(n, k)$, so it is computed once.
 
 ### 4.5 Decoding
 
 Let $S$ be the indices of any $k$ received packets, and let $R_S$ be those packets. Since $C = GD$,
 
-$$R_S = G_S\,D \quad\Longrightarrow\quad \boxed{D = G_S^{-1}\,R_S}$$
+```math
+R_S = G_S\,D \quad\Longrightarrow\quad \boxed{D = G_S^{-1}\,R_S}
+```
 
 The steps, and the code for each:
 
@@ -323,7 +345,7 @@ The steps, and the code for each:
 3. Invert $G_S$ with Gauss–Jordan elimination over $\mathrm{GF}(2^8)$ ([`invert`](util.c)). Augment $[G_S \mid I]$, reduce the left half to $I$, and read the inverse from the right half. This is $O(k^3)$ and depends only on the loss pattern ([`get_decoding_matrix`](rs.c)).
 4. Compute $D = G_S^{-1} R_S$ ([`rs_decoding`](rs.c)).
 
-**Only the lost rows need work.** Suppose data packet $t$ arrived at position $p$ of $R_S$. Then row $p$ of $G_S$ is $\mathbf{e}_t^T$, so $\mathbf{e}_p^T G_S = \mathbf{e}_t^T$, and row $t$ of $G_S^{-1}$ is $\mathbf{e}_p^T$: it just copies the received packet. Real work is needed only for the lost data packets, at $(\#\text{lost data}) \cdot k \cdot L$ multiplications. If only parity packets were lost, nothing needs to be done. This repo multiplies by the full $G_S^{-1}$ for simplicity.
+**Only the lost rows need work.** Suppose data packet $t$ arrived at position $p$ of $R_S$. Then row $p$ of $G_S$ is $\mathbf{e}_t^T$, so $\mathbf{e}_p^T G_S = \mathbf{e}_t^T$, and row $t$ of $G_S^{-1}$ is $\mathbf{e}_p^T$: it just copies the received packet. Real work is needed only for the lost data packets, at $`(\#\text{lost data}) \cdot k \cdot L`$ multiplications. If only parity packets were lost, nothing needs to be done. This repo multiplies by the full $G_S^{-1}$ for simplicity.
 
 ### 4.6 Erasures vs. errors
 
@@ -361,9 +383,11 @@ D (data)                     C = G·D (transmitted)
 
 Checking one byte by hand (row 4 of $G$ times column 0 of $D$):
 
-$$\texttt{1b}\cdot\texttt{46} \oplus \texttt{1c}\cdot\texttt{70} \oplus \texttt{12}\cdot\texttt{74} \oplus \texttt{14}\cdot\texttt{61} = \texttt{d4} \oplus \texttt{29} \oplus \texttt{fb} \oplus \texttt{c7} = \texttt{c1}.$$
+```math
+\texttt{1b}\cdot\texttt{46} \oplus \texttt{1c}\cdot\texttt{70} \oplus \texttt{12}\cdot\texttt{74} \oplus \texttt{14}\cdot\texttt{61} = \texttt{d4} \oplus \texttt{29} \oplus \texttt{fb} \oplus \texttt{c7} = \texttt{c1}.
+```
 
-**Loss and decoding.** Packets 0 and 3 are lost, so $S = \{1, 2, 4, 5\}$:
+**Loss and decoding.** Packets 0 and 3 are lost, so $`S = \{1, 2, 4, 5\}`$:
 
 ```
 R_S (received)               G_S            G_S⁻¹ (decoding matrix)
@@ -387,7 +411,7 @@ $G_S^{-1} R_S$ reproduces $D$ exactly, and the program prints `RS recovered the 
 | [`util.c`](util.c): `multiply`, `divide`, `galois_exp` | Table-based field arithmetic (§3.3) |
 | [`galois.c`](galois.c): `gf_multiply` | Shift-and-XOR multiplication (§2.5) |
 | [`util.c`](util.c): `vandermonde`, `get_vandermonde` | $V$ with points $x_i = i$ (§4.2) |
-| [`rs.c`](rs.c): `get_encoding_matrix` | $G = V\,V_{\text{up}}^{-1}$ (§4.3) |
+| [`rs.c`](rs.c): `get_encoding_matrix` | $`G = V\,V_{\text{up}}^{-1}`$ (§4.3) |
 | [`rs.c`](rs.c): `rs_encoding` | $C = GD$ (§4.4) |
 | [`rs.c`](rs.c): `get_encoded_matrix_after_loss` | $R_S$, the first $k$ received rows (§4.5) |
 | [`rs.c`](rs.c): `get_decoding_matrix` | $G_S^{-1}$ (§4.5) |
