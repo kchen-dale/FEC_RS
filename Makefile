@@ -26,9 +26,17 @@ $(TARGET): $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
+# Build and run the demo
+run: $(TARGET)
+	./$(TARGET)
+
+# Standalone bitwise GF(2^8) multiplication demo (for comparison only)
+galois: galois.c
+	$(CC) $(CFLAGS) -o $@ $<
+
 # Clean target
 clean:
-	rm -f $(OBJS) $(DEPS) $(TARGET)
+	rm -rf $(OBJS) $(DEPS) $(TARGET) galois *.dSYM
 
 # PHONY targets
-.PHONY: clean
+.PHONY: run clean

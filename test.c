@@ -3,7 +3,7 @@
 #include "util.h"
 #include "rs.h"
 
-int main() {
+int main(void) {
     //Build tables
     initializeTables();
     // Print the log table for verification
@@ -29,6 +29,10 @@ int main() {
     int loss_count = 2;
     Matrix *decoding = get_decoding_matrix(encoding, loss_index, loss_count);
     Matrix *data = read_data_from_file("data.txt", K, PKT_LEN);
+    if (!decoding || !data) {
+        fprintf(stderr, "Setup failed (run from the repo directory so data.txt can be found).\n");
+        return 1;
+    }
     Matrix *after_encoding;
     Matrix *after_decoding;
     Matrix *encoded_with_drop;
@@ -90,7 +94,9 @@ int main() {
     //Check if data matrix and after_decoding matrix are equal
     is_equal = matrix_equals(data, after_decoding);
     if(is_equal)
-        printf("RS recovered the lost packets successfully!");
+        printf("RS recovered the lost packets successfully!\n");
+    else
+        printf("RS failed to recover the lost packets.\n");
 
     // Free the matrix
     free_matrix(matrix);
@@ -101,5 +107,5 @@ int main() {
     free_matrix(encoded_with_drop);
     free_matrix(after_decoding);
 
-    return 0;
+    return is_equal ? 0 : 1;
 }

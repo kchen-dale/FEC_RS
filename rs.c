@@ -6,7 +6,11 @@
 // Drop specific rows according to loss_index. Always return a matrix with K rows.
 Matrix *get_matrix_with_drop(Matrix *encoding, int *loss_index, int loss_count) {
     int new_row = 0;
-    // Check if loss_count exceeds N - K
+    // Check if loss_count is out of range
+    if (loss_count < 0) {
+        printf("Error: loss_count must be non-negative.\n");
+        return NULL;
+    }
     if (loss_count > N - K) {
         printf("Error: Cannot recover more than %d loss packets.\n", N - K);
         return NULL;
@@ -50,6 +54,9 @@ Matrix *get_decoding_matrix(Matrix *encoding, int *loss_index, int loss_count) {
     
     Matrix *result;
     Matrix *loss_matrix = get_matrix_with_drop(encoding, loss_index, loss_count);
+    if (!loss_matrix) {
+        return NULL;
+    }
     result = invert(loss_matrix);
     free_matrix(loss_matrix);
 

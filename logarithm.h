@@ -14,6 +14,6 @@ extern short LOG_TABLE[FIELD_SIZE];
 extern unsigned char EXP_TABLE[FIELD_SIZE * 2 - 2];
 
 // Declare the initialization function
-void initializeTables();
+void initializeTables(void);
 
 #endif // LOGARITHM_H

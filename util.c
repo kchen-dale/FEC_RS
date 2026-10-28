@@ -318,8 +318,8 @@ Matrix *read_data_from_file(const char *filename, int rows, int cols) {
     // Read the values into the matrix
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
-            int value;
-            if (fscanf(file, "%x", &value) != 1 || value < 0 || value > 255) {
+            unsigned int value;
+            if (fscanf(file, "%x", &value) != 1 || value > 255) {
                 fprintf(stderr, "Error: Invalid value in file at row %d, col %d\n", r, c);
                 free_matrix(matrix);
                 fclose(file);

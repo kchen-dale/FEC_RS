@@ -3,4 +3,8 @@
 *.so
 *.exe
 build/
-.vscode/ 
+.vscode/
+*.d
+program
+galois
+*.dSYM/

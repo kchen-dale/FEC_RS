@@ -54,7 +54,7 @@ unsigned char* generateExpTable(short* logTable) {
     return result;
 }
 
-void initializeTables() {
+void initializeTables(void) {
     short* logTable = generateLogTable(POLYNOMIAL);
     unsigned char* expTable = generateExpTable(logTable); // Assume generateExpTable is defined
 
