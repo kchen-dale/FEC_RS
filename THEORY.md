@@ -281,7 +281,7 @@ By convention $0^0 = 1$, so the point $x_i = 0$ is allowed and gives the row $(1
 **Lemma (any $k$ rows of $V$ are invertible).** For any set $S$ of $k$ rows,
 
 ```math
-\det V_S = \prod_{i<j,\ i,j \in S} (x_j - x_i) \ne 0,
+\det V_S = \prod_{i \lt j,\ i,j \in S} (x_j - x_i) \ne 0,
 ```
 
 because the points are distinct. Another way to see it: if $V_S\mathbf{a} = 0$, then a polynomial of degree $< k$ has $k$ distinct roots, so it must be zero.
