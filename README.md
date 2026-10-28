@@ -8,6 +8,8 @@ A small, dependency-free C implementation of **packet-level Forward Error Correc
 
 ## How it works
 
+For the full math (finite fields, log tables, why any `K` packets suffice, and a byte-by-byte walkthrough of the demo), see [THEORY.md](THEORY.md).
+
 1. **GF(2⁸) arithmetic.** At startup, log and anti-log tables are built from the primitive polynomial `x⁸ + x⁴ + x³ + x² + 1` (`0x11D`). Addition is XOR, and multiplication and division are table lookups.
 2. **Encoding matrix.** An `N × K` Vandermonde matrix `V` (row `r` = `[1, r, r², …]`) is built, then multiplied by the inverse of its top `K × K` block. This produces a *systematic* matrix `E`: its top `K` rows form the identity, so the first `K` encoded packets are the original data unchanged, and the bottom `N - K` rows produce the parity.
 3. **Encode.** `encoded (N × PKT_LEN) = E (N × K) · data (K × PKT_LEN)`.
@@ -83,6 +85,7 @@ free_matrix(/* each matrix above */);
 | [`util.c`](util.c) / [`util.h`](util.h) | GF arithmetic, the `Matrix` type, multiplication, Gauss-Jordan inversion, file input |
 | [`rs.c`](rs.c) / [`rs.h`](rs.h) | RS encoding/decoding matrices and the encode/decode API; `K`, `N`, `PKT_LEN` |
 | [`test.c`](test.c) | End-to-end demo: encode, drop, decode, verify |
+| [`THEORY.md`](THEORY.md) | The math behind the code, with a worked example |
 | [`data.txt`](data.txt) | Sample input: `K` packets of `PKT_LEN` hex bytes |
 | [`galois.c`](galois.c) | Standalone bitwise GF(2⁸) multiply, for comparison with the table method |
 | [`Makefile`](Makefile) | Build rules |
